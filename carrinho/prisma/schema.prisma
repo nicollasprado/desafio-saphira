@@ -7,6 +7,13 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id String @id @default(uuid())
+  username String @unique
+  password String
+  cart Cart?
+}
+
 model Product {
   id String @id @default(uuid())
   name String @unique
@@ -21,6 +28,8 @@ model Cart {
   subtotal Int
   total Int
   cartItems CartItem[]
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId String @map("owner_id") @unique
 
   @@map("cart")
 }
@@ -32,5 +41,6 @@ model CartItem {
   productId String @map("product_id")
   quantity Int
 
+  @@unique([cartId, productId])
   @@map("product_id")
 }

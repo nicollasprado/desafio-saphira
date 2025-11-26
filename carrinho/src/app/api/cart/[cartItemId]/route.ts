@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import updateCartTotals from "@/util/updateCartTotals";
 import validateSchema from "@/util/validateSchema";
 import { StatusCodes } from "http-status-codes";
 import { NextRequest, NextResponse } from "next/server";
@@ -84,6 +85,8 @@ export async function PATCH(
     data: { quantity },
   });
 
+  await updateCartTotals(updated.cartId);
+
   return NextResponse.json(updated, { status: StatusCodes.NO_CONTENT });
 }
 
@@ -130,6 +133,8 @@ export async function DELETE(
   }
 
   await prisma.cartItem.delete({ where: { id: itemId } });
+
+  await updateCartTotals(item.cartId);
 
   return NextResponse.json({}, { status: StatusCodes.NO_CONTENT });
 }

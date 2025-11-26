@@ -5,6 +5,7 @@ import validateSchema from "@/util/validateSchema";
 import prisma from "@/lib/prisma";
 import { StatusCodes } from "http-status-codes";
 import { CartItem } from "~/prisma/generated/prisma/client";
+import updateCartTotals from "@/util/updateCartTotals";
 
 const reqBodySchema = z.object({
   cartId: z
@@ -92,6 +93,8 @@ export async function POST(req: NextRequest) {
       },
     });
   }
+
+  await updateCartTotals(cartId);
 
   return NextResponse.json(returnObject, { status: StatusCodes.CREATED });
 }

@@ -3,8 +3,8 @@ import z from "zod";
 import validator from "validator";
 import validateSchema from "@/util/validateSchema";
 import prisma from "@/lib/prisma";
-import { CartItem } from "~/app/generated/prisma/client";
 import { StatusCodes } from "http-status-codes";
+import { CartItem } from "~/prisma/generated/prisma/client";
 
 const reqBodySchema = z.object({
   cartId: z
@@ -18,6 +18,43 @@ const reqBodySchema = z.object({
 
 type TReqBody = z.infer<typeof reqBodySchema>;
 
+/**
+ * @swagger
+ * /api/cart:
+ *   post:
+ *     tags:
+ *       - Cart
+ *     summary: Adiciona produto ao carrinho
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - cartId
+ *               - productId
+ *               - quantity
+ *             properties:
+ *               cartId:
+ *                 type: string
+ *                 format: uuid
+ *               productId:
+ *                 type: string
+ *                 format: uuid
+ *               quantity:
+ *                 type: integer
+ *                 minimum: 1
+ *           example:
+ *             cartId: "e7a1f2d3-...-abcd"
+ *             productId: "b3c4d5e6-...-ef01"
+ *             quantity: 2
+ *     responses:
+ *       201:
+ *         description: CREATED
+ *       400:
+ *         description: BAD REQUEST
+ */
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as TReqBody;
 

@@ -2,6 +2,36 @@ import { StatusCodes } from "http-status-codes";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../lib/prisma";
 
+/**
+ * @swagger
+ * /api/products:
+ *   get:
+ *     tags:
+ *       - Products
+ *     summary: Retorna os produtos
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *           default: 0
+ *         description: Número da página (começando por 0)
+ *       - in: query
+ *         name: limit
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 10
+ *         description: Quantidade de itens por página
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: BAD REQUEST
+ */
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams;
   const page = searchParams.get("page");
@@ -19,11 +49,19 @@ export async function GET(req: NextRequest) {
   const numPage = Number(page);
   const numLimit = Number(limit);
 
+  const totalCount = await prisma.product.count();
+
   const offset = numPage * numLimit;
   const products = await prisma.product.findMany({
     skip: offset,
     take: numLimit,
   });
 
-  return NextResponse.json(products, { status: StatusCodes.OK });
+  return NextResponse.json(
+    {
+      products,
+      totalCount,
+    },
+    { status: StatusCodes.OK }
+  );
 }

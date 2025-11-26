@@ -12,7 +12,9 @@ const validateSchema = (
   const errors: $ZodIssue[][] = [];
 
   try {
-    schema.parse(req[field]);
+    const finalField = field === "body" ? "json" : field;
+
+    schema.parse(req[finalField]);
   } catch (err) {
     if (err instanceof ZodError) {
       errors.push(err.issues);

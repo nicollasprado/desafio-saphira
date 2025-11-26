@@ -2,6 +2,26 @@ import prisma from "@/lib/prisma";
 import { StatusCodes } from "http-status-codes";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * @swagger
+ * /api/cart/by-user:
+ *   get:
+ *     tags:
+ *       - Cart
+ *     summary: Retorna o carrinho do usuario
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: id do usuário
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: BAD REQUEST
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: { userId: string } }

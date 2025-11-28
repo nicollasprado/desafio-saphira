@@ -1,65 +1,104 @@
-'use client'
+"use client";
 
 import ICart from "@/interfaces/ICart";
 import IProduct from "@/interfaces/IProduct";
-import { SignOutButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import axios from "axios";
-import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Button } from "rsuite";
+import { Button, Pagination } from "rsuite";
 import ProductCard from "./components/ProductCard";
+import getCartIdFromStorage from "@/util/getCartIdFromStorage";
+import saveCartIdInStorage from "@/util/saveCartIdInStorage";
+import { Plus } from "lucide-react";
+import CartSidebar from "@/components/CartSidebar";
+import NewProductModal from "@/components/NewProductModal";
 
-export default async function Home() {
-  // await auth.protect()
-  const [cart, setCart] = useState<ICart>()
-  const [products, setProducts] = useState<IProduct[]>([])
+export default function Home() {
+  const [cart, setCart] = useState<ICart>();
+  const [products, setProducts] = useState<IProduct[]>([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 6 });
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [showNewProduct, setShowNewProduct] = useState(false);
 
   useEffect(() => {
-    const fetchCart = async () => {
-      const res = await axios.get(`api/cart/by-user/${}`)
+    const cartId = getCartIdFromStorage();
 
+    const createCart = async () => {
+      const res = await axios.post("/api/cart");
       setCart(res.data);
+      if (res.data?.id) {
+        saveCartIdInStorage(res.data.id);
+      }
+    };
+
+    if (!cartId) {
+      createCart();
+      return;
     }
 
+    const fetchCart = async () => {
+      const res = await axios.get(`/api/cart/${cartId}`);
+      setCart(res.data);
+    };
+
+    fetchCart();
+  }, []);
+
+  useEffect(() => {
     const fetchProducts = async () => {
-      const res = await axios.get("api/products");
+      const res = await axios.get("api/products", {
+        params: { page: pagination.page, limit: pagination.limit },
+      });
+      setProducts(res.data.products);
+      setTotalProducts(res.data.totalCount);
+    };
 
-      setProducts(res.data)
-    }
+    fetchProducts();
+  }, [pagination]);
 
-    fetchCart()
-    fetchProducts()
-  }, [])
-
-  if(!cart) {
-    return <p>Carregando dados...</p>
+  if (!cart) {
+    return <p>Carregando dados...</p>;
   }
 
   return (
-      <div className="w-full">
-        <header className="flex justify-around items-center w-full p-4 border-b border-b-[#cacaca7c]">
-          <h1>Carrinho</h1>
+    <div className="w-full h-full">
+      <header className="flex justify-around items-center w-full p-4 border-b border-b-[#cacaca7c]">
+        <h1>Meu Ecommerce</h1>
+      </header>
 
-          <div className="flex items-center gap-4">
-            <p className="text-lg">Username</p>
-
-            <Button appearance="ghost">
-              <SignOutButton />
+      <main className="flex gap-4 bg-slate-100 h-full p-4">
+        <section className="flex-1">
+          <div className="flex items-center justify-between mb-4">
+            <Button onClick={() => setShowNewProduct(true)}>
+              <Plus /> Novo Produto
             </Button>
           </div>
-        </header>
 
-        <main className="flex gap-2">
-          <ul>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {products.map((product) => (
               <li key={product.id}>
                 <ProductCard product={product} />
               </li>
             ))}
           </ul>
-          <div></div>
-        </main>
-      </div>
-  )
+
+          <Pagination
+            total={totalProducts}
+            activePage={pagination.page}
+            limit={pagination.limit}
+            onChangePage={(page) =>
+              setPagination((prev) => ({ ...prev, page }))
+            }
+          />
+        </section>
+
+        <CartSidebar cart={cart} />
+      </main>
+
+      <NewProductModal
+        open={showNewProduct}
+        onClose={() => setShowNewProduct(false)}
+        onCreated={(p) => setProducts((prev) => [p, ...prev])}
+      />
+    </div>
+  );
 }

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "cart" ALTER COLUMN "subtotal" SET DEFAULT 0,
+ALTER COLUMN "total" SET DEFAULT 0;

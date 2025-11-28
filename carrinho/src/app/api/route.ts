@@ -1,24 +1,27 @@
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { StatusCodes } from "http-status-codes";
-import { NextRequest, NextResponse } from "next/server";
 
 /**
  * @swagger
- * /api/cart/{id}:
+ * /api/cart:
  *   post:
  *     tags:
  *       - Cart
- *     summary: Cria um novo carrinho
+ *     summary: Cria um carrinho para o usuario
  *     responses:
- *       200:
- *         description: OK
+ *       201:
+ *         description: CREATED
  *       500:
  *         description: INTERNAL SERVER ERROR
  */
 export async function POST(req: NextRequest) {
   const cart = await prisma.cart.create({
     data: {},
+    include: {
+      cartItems: true,
+    },
   });
 
-  return NextResponse.json(cart, { status: StatusCodes.OK });
+  return NextResponse.json(cart, { status: StatusCodes.CREATED });
 }

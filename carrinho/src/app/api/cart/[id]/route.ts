@@ -58,7 +58,7 @@ export async function PATCH(
 
   const body: TPatchReqBody = (await req.json()) as TPatchReqBody;
 
-  const errors = validateSchema(req, "body", patchReqBodySchema);
+  const errors = validateSchema(body, patchReqBodySchema);
 
   if (errors.length > 0) {
     return NextResponse.json({}, { status: StatusCodes.BAD_REQUEST });
@@ -77,7 +77,7 @@ export async function PATCH(
 
   if (quantity === 0) {
     await prisma.cartItem.delete({ where: { id: cartItemId } });
-    return NextResponse.json({}, { status: StatusCodes.NO_CONTENT });
+    return NextResponse.json(null, { status: StatusCodes.NO_CONTENT });
   }
 
   const updated = await prisma.cartItem.update({
@@ -87,7 +87,56 @@ export async function PATCH(
 
   await updateCartTotals(updated.cartId);
 
-  return NextResponse.json(updated, { status: StatusCodes.NO_CONTENT });
+  return NextResponse.json(null, { status: StatusCodes.NO_CONTENT });
+}
+
+/**
+ * @swagger
+ * /api/cart/{id}:
+ *   get:
+ *     tags:
+ *       - Cart
+ *     summary: Retorna o carrinho do usuario
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: id do carrinho
+ *     responses:
+ *       200:
+ *         description: OK
+ *       400:
+ *         description: BAD REQUEST
+ */
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = await params;
+
+  const cart = await prisma.cart.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      cartItems: {
+        include: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  if (!cart) {
+    return NextResponse.json(
+      { error: "cart not found" },
+      { status: StatusCodes.BAD_REQUEST }
+    );
+  }
+
+  return NextResponse.json(cart, { status: StatusCodes.OK });
 }
 
 /**
@@ -112,18 +161,18 @@ export async function PATCH(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { itemId: string } }
+  { params }: { params: { id: string } }
 ) {
-  const { itemId } = params;
+  const { id } = await params;
 
-  if (!itemId) {
+  if (!id) {
     return NextResponse.json(
       { error: "itemId is missing" },
       { status: StatusCodes.BAD_REQUEST }
     );
   }
 
-  const item = await prisma.cartItem.findUnique({ where: { id: itemId } });
+  const item = await prisma.cartItem.findUnique({ where: { id } });
 
   if (!item) {
     return NextResponse.json(
@@ -132,9 +181,9 @@ export async function DELETE(
     );
   }
 
-  await prisma.cartItem.delete({ where: { id: itemId } });
+  await prisma.cartItem.delete({ where: { id } });
 
   await updateCartTotals(item.cartId);
 
-  return NextResponse.json({}, { status: StatusCodes.NO_CONTENT });
+  return NextResponse.json(null, { status: StatusCodes.NO_CONTENT });
 }

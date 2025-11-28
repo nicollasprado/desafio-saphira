@@ -1,6 +1,8 @@
 import { StatusCodes } from "http-status-codes";
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../lib/prisma";
+import prisma from "@/lib/prisma";
+import z from "zod";
+import validateSchema from "@/util/validateSchema";
 
 /**
  * @swagger
@@ -51,7 +53,7 @@ export async function GET(req: NextRequest) {
 
   const totalCount = await prisma.product.count();
 
-  const offset = numPage * numLimit;
+  const offset = (numPage - 1) * numLimit;
   const products = await prisma.product.findMany({
     skip: offset,
     take: numLimit,
@@ -64,4 +66,79 @@ export async function GET(req: NextRequest) {
     },
     { status: StatusCodes.OK }
   );
+}
+
+const reqBodySchema = z.object({
+  name: z.string().min(1),
+  price: z.number().int().nonnegative(),
+  image_url: z.url().optional(),
+});
+
+type TReqBody = z.infer<typeof reqBodySchema>;
+
+/**
+ * @swagger
+ * /api/products:
+ *   post:
+ *     tags:
+ *       - Products
+ *     summary: Cria um novo produto
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - price
+ *             properties:
+ *               name:
+ *                 type: string
+ *               price:
+ *                 type: integer
+ *                 description: Preço em centavos
+ *               image_url:
+ *                 type: string
+ *                 format: uri
+ *           example:
+ *             name: "Tênis legal"
+ *             price: 19990
+ *             image_url: "https://example.com/image.jpg"
+ *     responses:
+ *       201:
+ *         description: CREATED
+ *       400:
+ *         description: BAD REQUEST
+ *       409:
+ *         description: CONFLICT
+ */
+export async function POST(req: NextRequest) {
+  const body = (await req.json()) as TReqBody;
+
+  const { name, price, image_url } = body;
+
+  const errors = validateSchema(body, reqBodySchema);
+
+  if (errors.length > 0) {
+    return NextResponse.json({ errors }, { status: StatusCodes.BAD_REQUEST });
+  }
+
+  const exists = await prisma.product.findUnique({ where: { name } });
+  if (exists) {
+    return NextResponse.json(
+      { error: "product with this name already exists" },
+      { status: StatusCodes.CONFLICT }
+    );
+  }
+
+  const created = await prisma.product.create({
+    data: {
+      name,
+      price,
+      image_url: image_url ?? "",
+    },
+  });
+
+  return NextResponse.json(created, { status: StatusCodes.CREATED });
 }

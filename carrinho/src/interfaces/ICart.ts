@@ -1,9 +1,8 @@
-import ICartItem from "./ICartItem";
+import ICartItemWithProduct from "./ICartItemWithProduct";
 
 export default interface ICart {
-    id: string;
-    subtotal: number
-    total: number
-    cartItems: ICartItem[]
-    ownerId: string
+  id: string;
+  subtotal: number;
+  total: number;
+  cartItems: ICartItemWithProduct[];
 }

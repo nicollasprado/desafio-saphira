@@ -12,6 +12,7 @@
     "@clerk/nextjs": "^6.35.5",
     "@prisma/adapter-pg": "^7.0.1",
     "@prisma/client": "^7.0.1",
+    "axios": "^1.13.2",
     "dotenv": "^17.2.3",
     "http-status-codes": "^2.3.0",
     "lucide-react": "^0.555.0",

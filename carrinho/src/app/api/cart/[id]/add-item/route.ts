@@ -54,7 +54,7 @@ type TReqBody = z.infer<typeof reqBodySchema>;
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const body = (await req.json()) as TReqBody;
 
@@ -65,7 +65,7 @@ export async function POST(
   }
 
   const { productId, quantity } = body;
-  const { id: cartId } = await params;
+  const { id: cartId } = await context.params;
 
   const cartItemExists = await prisma.cartItem.findUnique({
     where: {

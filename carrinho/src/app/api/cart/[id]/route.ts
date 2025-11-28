@@ -45,9 +45,9 @@ type TPatchReqBody = z.infer<typeof patchReqBodySchema>;
  */
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { cartItemId: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { cartItemId } = params;
+  const { id: cartItemId } = await context.params;
 
   if (!cartItemId) {
     return NextResponse.json(
@@ -77,7 +77,7 @@ export async function PATCH(
 
   if (quantity === 0) {
     await prisma.cartItem.delete({ where: { id: cartItemId } });
-    return NextResponse.json(null, { status: StatusCodes.NO_CONTENT });
+    return new NextResponse(null, { status: StatusCodes.NO_CONTENT });
   }
 
   const updated = await prisma.cartItem.update({
@@ -87,7 +87,7 @@ export async function PATCH(
 
   await updateCartTotals(updated.cartId);
 
-  return NextResponse.json(null, { status: StatusCodes.NO_CONTENT });
+  return new NextResponse(null, { status: StatusCodes.NO_CONTENT });
 }
 
 /**
@@ -112,9 +112,9 @@ export async function PATCH(
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await context.params;
 
   const cart = await prisma.cart.findUnique({
     where: {
@@ -161,9 +161,9 @@ export async function GET(
  */
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id } = await context.params;
 
   if (!id) {
     return NextResponse.json(
@@ -185,5 +185,5 @@ export async function DELETE(
 
   await updateCartTotals(item.cartId);
 
-  return NextResponse.json(null, { status: StatusCodes.NO_CONTENT });
+  return new NextResponse(null, { status: StatusCodes.NO_CONTENT });
 }

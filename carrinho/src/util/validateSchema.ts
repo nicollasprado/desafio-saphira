@@ -1,20 +1,9 @@
-import { ZodError, ZodObject } from "zod";
-import { $ZodIssue } from "zod/v4/core";
+import { ZodIssue, ZodTypeAny } from "zod";
 
-const validateSchema = (body: object, schema: ZodObject): $ZodIssue[][] => {
-  const errors: $ZodIssue[][] = [];
-
-  try {
-    schema.parse(body);
-  } catch (err) {
-    if (err instanceof ZodError) {
-      errors.push(err.issues);
-    }
-
-    throw err;
-  }
-
-  return errors;
+const validateSchema = (body: unknown, schema: ZodTypeAny): ZodIssue[] => {
+  const result = schema.safeParse(body);
+  if (result.success) return [];
+  return result.error.issues;
 };
 
 export default validateSchema;

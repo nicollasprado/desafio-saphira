@@ -5,7 +5,7 @@ import IProduct from "@/interfaces/IProduct";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Button, Pagination } from "rsuite";
-import ProductCard from "./components/ProductCard";
+import ProductCard from "../components/ProductCard";
 import getCartIdFromStorage from "@/util/getCartIdFromStorage";
 import saveCartIdInStorage from "@/util/saveCartIdInStorage";
 import { Plus } from "lucide-react";
@@ -81,14 +81,18 @@ export default function Home() {
             ))}
           </ul>
 
-          <Pagination
-            total={totalProducts}
-            activePage={pagination.page}
-            limit={pagination.limit}
-            onChangePage={(page) =>
-              setPagination((prev) => ({ ...prev, page }))
-            }
-          />
+          <div className="flex items-center justify-center">
+            <Pagination
+              total={totalProducts}
+              activePage={pagination.page}
+              limit={pagination.limit}
+              onChangePage={(page) =>
+                setPagination((prev) => ({ ...prev, page }))
+              }
+              prev
+              next
+            />
+          </div>
         </section>
 
         <CartSidebar cart={cart} />

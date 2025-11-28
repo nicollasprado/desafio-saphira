@@ -16,6 +16,7 @@ export default function ProductCard({ product }: IProductCardProps) {
       productId,
       quantity: 1,
     });
+    window.location.reload();
   };
 
   return (
